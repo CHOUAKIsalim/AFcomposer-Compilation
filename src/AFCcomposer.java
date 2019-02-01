@@ -370,6 +370,7 @@ public class AFCcomposer implements AFCcomposerConstants {
                 for(int i=0; i<composants.size(); i++)
                 {
                         System.out.println(composants.get(i).getNom()+"  "+composants.get(i).getType());
+                        composants.get(i).afficherProprietes();
                 }
   }
 

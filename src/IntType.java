@@ -25,8 +25,8 @@ public class IntType extends PropertyType
 	@Override
 	public boolean isCompatible(String valeur)
 	{
-
-		return false;
+		if(valeur.matches("^\\p{Digit}+$")) return true;
+		else return false;
 	}
 
 }

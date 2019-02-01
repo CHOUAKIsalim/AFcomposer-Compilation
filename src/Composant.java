@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class Composant
@@ -30,6 +31,28 @@ public class Composant
     public void ajouterProprietes(ArrayList<String> names, ArrayList<String> types )
     {
     	
+    	if(types.get(0).toLowerCase().compareTo("boolean")==0 || types.get(0).toLowerCase().compareTo("bool")==0)
+    	{
+    		for(int j=0; j<names.size();j++)
+    		{
+        		this.proprietes.put(names.get(j), new Property(names.get(j),BooleanType.getInstance()));    			
+    		}
+    	}
+    	else if(types.get(0).toLowerCase().compareTo("int") == 0 )
+    	{
+    		for(int j=0; j<names.size();j++)
+    		{
+        		this.proprietes.put(names.get(j), new Property(names.get(j),IntType.getInstance()));    			
+    		}    		
+    	}
+    	else 
+    	{
+    		PropertyType enumeration = new EnumType(types);
+    		for(int j=0; j<names.size();j++)
+    		{
+        		this.proprietes.put(names.get(j), new Property(names.get(j),enumeration));    			
+    		}    		
+    	}
     }
 
     public String getNom()
@@ -46,6 +69,17 @@ public class Composant
     {
     	return 1;
     }
-    
+
+    public void afficherProprietes()
+    {
+        Iterator iterator = this.proprietes.entrySet().iterator();
+        while (iterator.hasNext()) 
+        {
+        	  System.out.println("Propriété :");
+	          Map.Entry mapentry = (Map.Entry) iterator.next();
+	          Property propriete = (Property) mapentry.getValue();
+	          propriete.afficher();
+        } 
+    }
 
 }
