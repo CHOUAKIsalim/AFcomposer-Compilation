@@ -1,0 +1,153 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+
+options{
+   LOOKAHEAD=1;  static = true;
+}	PARSER_BEGIN(AFCcomposer)import java.util.ArrayList;
+
+public class AFCcomposer{
+  	public static ArrayList<Composant> composants  =  new ArrayList<Composant>(); 	public static void main(String args []) throws ParseException  	{    	AFCcomposer parser = new AFCcomposer(System.in);   	 	while (true)	    {		      try		      {
+		        	AFCcomposer.start();		      }
+		      catch (Error e)
+		      {
+			        System.out.println("Oops.");
+			        System.out.println(e.getMessage());
+			        break;
+		      }		      catch (Exception e)		      {			        System.out.println("NOK.");			        System.out.println(e.getMessage());			        AFCcomposer.ReInit(System.in);		      }	    }  	}}PARSER_END(AFCcomposer)SKIP :{  " "| "\r"| "\t"| "\n"}
+TOKEN : /* Mots Clé */{  < DEBUT : "DEBUT" >| < FIN : "FIN" >| < INTERFACE : "INTERFACE" >| < COMP : "COMP" >
+| < PROP : "PROP" >
+| < EVT : "EVT" | "EVET" >
+| < INV : "INV" > // On en a pas parlé dans le texte ! ! ! !
+| < INIT : "INITIALISATIONS" >
+| < ACT : "ACTIONS" >}TOKEN : //Composant{
+  < THEN : "then" | "THEN" | "Then">  
+| < IF : "if" |"If" |"IF" >
+| < PROPRIETAIRE : "(" <ID> ")" >| < TYPE : "Fenetre" | "Boite Dialogue" | "Panel" | "Bouton" | "Champs Texte" | "Combo Box" | "Liste Deroulante" | "Case a Cocher" | "Bouton Radio" | "Icone" | "Menu" | "Caneva" >| < PROPERTYTYPE : "Boolean" | "int" | "Bool" >
+| < NOMACTIONUTILISATEUR : ( "Click" | "Double Click" | "ChrKeyPress" | "NumKeyPress" | "EnterKeyPress" | "Drag" | "Drop" | "EnterPress" | "DbClick") ((<ID>)?) >
+
+}
+TOKEN : /* General */
+{
+  < LETTRE: ["a"-"z", "A"-"Z"] >
+| < NOMBRE : (["0" - "9"])+ >
+| < ID : (<LETTRE>)+ >
+| < COMPARAISON : "<>" | "=" | "<" | ">" | "<=" | ">=" >
+| < AFFECTATIONOperation : ":=" >
+| < ACCOLADEOuvrante : "{" >
+| < ACCOLADEFermante : "}" >
+| < SEPARATEUR : ";" >
+| < DeuxPoints : ":" >
+| < PLUS : "+" >
+| < APOSTROPHE : "'" >
+| < ACCESATTRIBUT : "::" >
+| < TILDE : "~" >	
+}
+
+void start(): {} {<DEBUT> Interface()}
+
+void Interface(): {} { <INTERFACE> composantdeclaration() }
+
+void composantdeclaration():
+{
+	Token nom, type;
+	Composant comp;
+}
+{
+  	<COMP> nom=<ID> <DeuxPoints> type=<TYPE> (<PROPRIETAIRE>)? (<SEPARATEUR>)?
+  	{
+		comp = new Composant(nom.toString(),type.toString());
+		composants.add(comp);
+ 	}  													
+  	startPropriete() | initialisation()
+}
+
+void startPropriete(): {} {<PROP> propriete()}
+
+void propriete():
+{
+	Token nom, type;
+	ArrayList<String> types = new ArrayList<String>();
+	ArrayList<String> noms = new ArrayList<String>();
+}
+{
+  	nom = <ID> {noms.add(nom.toString());}
+ 	(", " nom = <ID> { noms.add(nom.toString());} )*
+
+  	<DeuxPoints>
+  	(type = <PROPERTYTYPE> {types.add(type.toString());}
+  	| <ACCOLADEOuvrante> (type = <ID> {types.add(type.toString());})(", "(type = <ID> {types.add(type.toString());}))* <ACCOLADEFermante>  )
+  	<SEPARATEUR>
+  	{
+		composants.get(composants.size()-1).ajouterProprietes(noms,types);
+  	}
+  	propriete() | startEvent()
+
+}
+
+void startEvent(): {} {<EVT> event()}
+
+void event():
+{
+
+}
+{
+	 <NOMACTIONUTILISATEUR> (<PROPRIETAIRE>)? <ACCOLADEOuvrante> <IF> <ID><COMPARAISON><ID> <THEN> EventAction() <ACCOLADEFermante> event() | composantdeclaration()
+}
+
+void EventAction(): {} { <ID>("."<ID>)* (<AFFECTATIONOperation><ID>)? (<PLUS>(<NOMBRE>|<APOSTROPHE><ID><APOSTROPHE>))?    (<SEPARATEUR>EventAction())? }
+
+void initialisation(): {} { <INIT> actionInit()}
+
+void actionInit():
+{
+	Token nomComposant, nomPropriete, valeurPropriete;
+}
+{
+  nomComposant = <ID> <ACCESATTRIBUT> nomPropriete = <ID><AFFECTATIONOperation>(valeurPropriete=<ID>|valeurPropriete=<NOMBRE>) <SEPARATEUR>
+  {
+    	int i=0;
+    	boolean trouv=false;
+    	while(!trouv && i<composants.size())
+    	{
+			if(composants.get(i).getNom() == nomComposant.toString());
+			{
+			  	trouv = true;
+			  	int res = composants.get(i).initialiserPropriete(nomPropriete.toString(), valeurPropriete.toString());
+				if(res==1) 	
+				{
+					//Réussi
+				}
+				else
+				{
+				 	//Attribut non existant ou valeur non dans type 
+				}
+			}
+			i++;
+    	}
+		if(!trouv)
+		{
+			//Composant non existant
+		}
+  }
+  actionInit()
+  | actions()
+
+} 
+
+void actions(): {} {<ACT> action() fin()}
+
+void action(): {} {     element() ( (<SEPARATEUR>|<TILDE>|<PLUS>) element())* }
+
+void element(): {} { operation() | <ACCOLADEOuvrante> action() <ACCOLADEFermante>  }
+
+void operation(): {} {<NOMACTIONUTILISATEUR><PROPRIETAIRE>}
+
+void fin(): {} {<FIN>
+	{
+		for(int i=0; i<composants.size(); i++)
+		{
+			System.out.println(composants.get(i).getNom()+"  "+composants.get(i).getType());
+		}
+}
+}
