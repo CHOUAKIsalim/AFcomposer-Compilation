@@ -1,5 +1,5 @@
 
-public class BooleanType extends PropertyType
+public class BooleanType extends TypePropriete
 {
 
 	private static BooleanType instance;
@@ -23,7 +23,7 @@ public class BooleanType extends PropertyType
     }
 
 	@Override
-	public boolean isCompatible(String valeur)
+	public boolean compatible(String valeur)
 	{
 		if(valeur.toLowerCase().compareTo("true")==0 || valeur.toLowerCase().compareTo("false") == 0) return true;
 		else return false;

@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class EnumType extends PropertyType
+public class EnumType extends TypePropriete
 {
 
 	private ArrayList<String> valeursPossibles = new ArrayList<String>();
@@ -12,13 +12,13 @@ public class EnumType extends PropertyType
 	
 	
 	@Override
-	public boolean isCompatible(String valeur)
+	public boolean compatible(String valeur)
 	{
 		boolean trouv=false;
 		int i=0;
 		while(!trouv && i<this.valeursPossibles.size() )
 		{
-			if(this.valeursPossibles.get(i).toLowerCase() == valeur.toLowerCase()) 
+			if(this.valeursPossibles.get(i).toLowerCase().compareTo(valeur.toLowerCase())==0) 
 			{
 				trouv = true;
 			}

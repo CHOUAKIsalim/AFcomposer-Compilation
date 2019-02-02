@@ -38,7 +38,7 @@ public class AFCcomposer implements AFCcomposerConstants {
   }
 
   static final public void composantdeclaration() throws ParseException {
-        Token nom, type;
+        Token nom, type, proprietaire;
         Composant comp;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case COMP:
@@ -46,9 +46,40 @@ public class AFCcomposer implements AFCcomposerConstants {
       nom = jj_consume_token(ID);
       jj_consume_token(DeuxPoints);
       type = jj_consume_token(TYPE);
+                        int i=0;
+                boolean trouv=false;
+                while(!trouv && i<composants.size())
+                {
+                                if(composants.get(i).getNom().compareTo(nom.toString())==0)
+                                {
+                                        trouv = true;
+                                        //Composant déja existant ! ! ! ! 
+                                }
+                                i++;
+                }
+                        if(!trouv)
+                        {
+                                comp = new Composant(nom.toString(),type.toString());
+                                composants.add(comp);
+                        }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PROPRIETAIRE:
-        jj_consume_token(PROPRIETAIRE);
+        proprietaire = jj_consume_token(PROPRIETAIRE);
+                i=0;
+                trouv=false;
+                while(!trouv && i<composants.size()-1)
+                {
+                                if(composants.get(i).getNom().compareTo(proprietaire.toString())==0)
+                                {
+                                        trouv = true;
+                                        composants.get(i).setProprietaire(composants.get(i));
+                                }
+                                i++;
+                }
+                        if(!trouv)
+                        {
+                                //Proprietaire non existant
+                        }
         break;
       default:
         jj_la1[0] = jj_gen;
@@ -62,8 +93,6 @@ public class AFCcomposer implements AFCcomposerConstants {
         jj_la1[1] = jj_gen;
         ;
       }
-                comp = new Composant(nom.toString(),type.toString());
-                composants.add(comp);
       startPropriete();
       break;
     case INIT:
@@ -101,7 +130,24 @@ public class AFCcomposer implements AFCcomposerConstants {
         }
         jj_consume_token(33);
         nom = jj_consume_token(ID);
-                           noms.add(nom.toString());
+                int i=0;
+                boolean trouv=false;
+                while(!trouv && i<noms.size())
+                {
+                                if(noms.get(i).compareTo(nom.toString())==0)
+                                {
+                                        trouv = true;
+                                }
+                                i++;
+                }
+                if(!trouv)
+                {
+                                noms.add(nom.toString());
+                        }
+                        else
+                        {
+                                        //deux attributs avec le meme nom
+                        }
       }
       jj_consume_token(DeuxPoints);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -125,7 +171,24 @@ public class AFCcomposer implements AFCcomposerConstants {
           }
           jj_consume_token(33);
           type = jj_consume_token(ID);
-                                                                                           types.add(type.toString());
+                        int i=0;
+                boolean trouv=false;
+                while(!trouv && i<types.size())
+                {
+                                if(types.get(i).compareTo(type.toString())==0)
+                                {
+                                        trouv = true;
+                                }
+                                i++;
+                }
+                if(!trouv)
+                {
+                                types.add(type.toString());
+                        }
+                        else
+                        {
+                                        //deux attributs avec le meme nom
+                        }
         }
         jj_consume_token(ACCOLADEFermante);
         break;
@@ -273,7 +336,7 @@ public class AFCcomposer implements AFCcomposerConstants {
         boolean trouv=false;
         while(!trouv && i<composants.size())
         {
-                        if(composants.get(i).getNom() == nomComposant.toString());
+                        if(composants.get(i).getNom().compareTo(nomComposant.toString())==0)
                         {
                                 trouv = true;
                                 int res = composants.get(i).initialiserPropriete(nomPropriete.toString(), valeurPropriete.toString());
@@ -281,9 +344,13 @@ public class AFCcomposer implements AFCcomposerConstants {
                                 {
                                         //Réussi
                                 }
-                                else
+                                else if(res==0)
                                 {
-                                        //Attribut non existant ou valeur non dans type 
+                                        //Attribut non existant 
+                                }
+                                else if(res==-1)
+                                {
+                                        //Valeur non compatible
                                 }
                         }
                         i++;
@@ -367,6 +434,7 @@ public class AFCcomposer implements AFCcomposerConstants {
 
   static final public void fin() throws ParseException {
     jj_consume_token(FIN);
+                System.out.println(composants.size());
                 for(int i=0; i<composants.size(); i++)
                 {
                         System.out.println(composants.get(i).getNom()+"  "+composants.get(i).getType());

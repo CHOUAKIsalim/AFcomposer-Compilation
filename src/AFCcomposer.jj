@@ -7,7 +7,7 @@
 }	PARSER_BEGIN(AFCcomposer)import java.util.ArrayList;
 
 public class AFCcomposer{
-  	public static ArrayList<Composant> composants  =  new ArrayList<Composant>(); 	public static void main(String args []) throws ParseException  	{    	AFCcomposer parser = new AFCcomposer(System.in);   	 	while (true)	    {		      try		      {
+  	public static ArrayList<Composant> composants  =  new ArrayList<Composant>(); 	public static void main(String args []) throws ParseException  	{    	AFCcomposer parser = new AFCcomposer(System.in);   	 	while (true)	    { 		      try		      {
 		        	AFCcomposer.start();		      }
 		      catch (Error e)
 		      {
@@ -50,15 +50,51 @@ void Interface(): {} { <INTERFACE> composantdeclaration() }
 
 void composantdeclaration():
 {
-	Token nom, type;
+	Token nom, type, proprietaire;
 	Composant comp;
 }
 {
-  	<COMP> nom=<ID> <DeuxPoints> type=<TYPE> (<PROPRIETAIRE>)? (<SEPARATEUR>)?
+  	<COMP> nom=<ID> <DeuxPoints> type=<TYPE> 
   	{
-		comp = new Composant(nom.toString(),type.toString());
-		composants.add(comp);
- 	}  													
+		  	int i=0;
+	    	boolean trouv=false;
+	    	while(!trouv && i<composants.size())
+	    	{
+				if(composants.get(i).getNom().compareTo(nom.toString())==0)
+				{
+				  	trouv = true;
+				  	//Composant déja existant ! ! ! ! 
+				}
+				i++;
+	    	}
+			if(!trouv)
+			{
+				comp = new Composant(nom.toString(),type.toString());
+				composants.add(comp);
+			}
+ 	}
+ 	(
+	 	proprietaire = <PROPRIETAIRE>
+	 	{
+	    	i=0;
+	    	trouv=false;
+	    	while(!trouv && i<composants.size()-1)
+	    	{
+				if(composants.get(i).getNom().compareTo(proprietaire.toString())==0)
+				{
+				  	trouv = true;
+				  	composants.get(i).setProprietaire(composants.get(i));
+				}
+				i++;
+	    	}
+			if(!trouv)
+			{
+				//Proprietaire non existant
+			}
+				
+		}
+ 	)?
+	(<SEPARATEUR>)? 													
   	startPropriete() | initialisation()
 }
 
@@ -72,11 +108,53 @@ void propriete():
 }
 {
   	nom = <ID> {noms.add(nom.toString());}
- 	(", " nom = <ID> { noms.add(nom.toString());} )*
+ 	(", " nom = <ID>
+ 		{
+	    	int i=0;
+	    	boolean trouv=false;
+	    	while(!trouv && i<noms.size())
+	    	{
+				if(noms.get(i).compareTo(nom.toString())==0)
+				{
+				  	trouv = true;
+				}
+				i++;
+	    	}
+	    	if(!trouv)
+	    	{
+    	   	  		noms.add(nom.toString());
+	   		}
+	   		else  		  
+			{
+			  		//deux attributs avec le meme nom
+			}
+ 	  	}
+  	)*
 
   	<DeuxPoints>
   	(type = <PROPERTYTYPE> {types.add(type.toString());}
-  	| <ACCOLADEOuvrante> (type = <ID> {types.add(type.toString());})(", "(type = <ID> {types.add(type.toString());}))* <ACCOLADEFermante>  )
+  	| <ACCOLADEOuvrante> (type = <ID> {types.add(type.toString());})(", "(type = <ID>
+  	{
+			int i=0;
+	    	boolean trouv=false;
+	    	while(!trouv && i<types.size())
+	    	{
+				if(types.get(i).compareTo(type.toString())==0)
+				{
+				  	trouv = true;
+				}
+				i++;
+	    	}
+	    	if(!trouv)
+	    	{
+    	   	  		types.add(type.toString());
+	   		}
+	   		else  		  
+			{
+			  		//deux attributs avec le meme nom
+			}
+	}
+  	))* <ACCOLADEFermante>  )
   	<SEPARATEUR>
   	{
 		composants.get(composants.size()-1).ajouterProprietes(noms,types);
@@ -88,7 +166,7 @@ void propriete():
 void startEvent(): {} {<EVT> event()}
 
 void event():
-{
+{ 
 
 }
 {
@@ -110,17 +188,21 @@ void actionInit():
     	boolean trouv=false;
     	while(!trouv && i<composants.size())
     	{
-			if(composants.get(i).getNom() == nomComposant.toString());
+			if(composants.get(i).getNom().compareTo(nomComposant.toString())==0)
 			{
 			  	trouv = true;
-			  	int res = composants.get(i).initialiserPropriete(nomPropriete.toString(), valeurPropriete.toString());
+			 	int res = composants.get(i).initialiserPropriete(nomPropriete.toString(), valeurPropriete.toString());
 				if(res==1) 	
 				{
 					//Réussi
 				}
-				else
+				else if(res==0)
 				{
-				 	//Attribut non existant ou valeur non dans type 
+				 	//Attribut non existant 
+				}
+				else if(res==-1)
+				{
+					//Valeur non compatible
 				}
 			}
 			i++;
@@ -145,6 +227,7 @@ void operation(): {} {<NOMACTIONUTILISATEUR><PROPRIETAIRE>}
 
 void fin(): {} {<FIN>
 	{
+		System.out.println(composants.size());
 		for(int i=0; i<composants.size(); i++)
 		{
 			System.out.println(composants.get(i).getNom()+"  "+composants.get(i).getType());
