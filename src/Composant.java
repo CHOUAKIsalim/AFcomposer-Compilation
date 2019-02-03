@@ -100,11 +100,32 @@ public class Composant
     	this.evenements.put(nom, new AffectationEvenement(nom));
     }
     
+    public int ajouterConditionEvenementParametre(String nomEvenement, String variableCondition, String valeurCondition, String type, String parametre)
+    {
+    	if(this.proprietes.containsKey(variableCondition))
+    	{
+    		if(this.proprietes.get(variableCondition).compatible(valeurCondition))
+    		{
+        		this.evenements.put(nomEvenement, new ConditionEvenementParametre(nomEvenement,this.proprietes.get(variableCondition), valeurCondition, type,parametre));
+        		return 1;
+    		}
+    		else
+    		{
+    			return -1;
+    		}
+    	}
+    	else
+    	{
+    		return 0;
+    	}
+    	
+    }
+    
     public int ajouterAffectation(String nomEvent,String variable,String valeur)
     {
-    	if(this.proprietes.containsKey(variable))
+    	if(this.proprietes.containsKey(variable) || (this.evenements.get(nomEvent).getClass().toString().compareTo(ConditionEvenementParametre.class.toString())==0 && ((ConditionEvenementParametre)this.evenements.get(nomEvent)).getNomParametre().compareTo(variable)==0) )
     	{
-    		if(this.proprietes.get(variable).compatible(valeur))
+    		if((this.proprietes.containsKey(variable) && this.proprietes.get(variable).compatible(valeur) )|| (this.evenements.get(nomEvent).getClass().toString().compareTo(ConditionEvenementParametre.class.toString())==0 && ((ConditionEvenementParametre)this.evenements.get(nomEvent)).getNomParametre().compareTo(valeur)==0))
     		{
     			this.evenements.get(nomEvent).ajouterAffectation(this.proprietes.get(variable),valeur);
     	    	return 1;
@@ -155,7 +176,7 @@ public class Composant
     			return -1;
     		}
     	}
-    	else
+    	else	
     	{
     		return 0;
     	}
@@ -165,19 +186,22 @@ public class Composant
     
     public void afficherProprietes()
     {
-    	System.out.println(this.evenements.size());
     	Iterator iterator = this.evenements.entrySet().iterator();
     	
     	while (iterator.hasNext()) 
     	{
-    			System.out.println("Propriété :");
     			Map.Entry mapentry = (Map.Entry) iterator.next();
     		//	Propriete propriete = (Propriete) mapentry.getValue();
     			Evenement evenement = (Evenement) mapentry.getValue();
-    		//	System.out.println(evenement.getClass());
+    //			System.out.println(evenement.getClass());
 //    			propriete.afficher();
     			evenement.afficherActions();
     	} 
+    }
+    
+    public int getNb()
+    {
+    	return this.evenements.size();
     }
 
 

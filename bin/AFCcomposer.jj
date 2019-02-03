@@ -167,15 +167,16 @@ void startEvent(): {} {<EVT> event()}
 
 void event():
 { 
-	Token nom,type=null,variable=null,valeur=null;
-	int condition = 0;
+	Token nom,type=null,variable=null,valeur=null,parametre=null;
+	int condition = 0,parametrePresence = 0;
 }
 {
-	 nom = <NOMACTIONUTILISATEUR> (<PROPRIETAIRE>)? <ACCOLADEOuvrante> (<IF> variable = <ID> type = <COMPARAISON> valeur = <ID> <THEN> {condition=1;})?
-	 {
-	   	if(condition==1)
+	 nom = <NOMACTIONUTILISATEUR> (parametre=<PROPRIETAIRE>{parametrePresence=1;})? <ACCOLADEOuvrante> (<IF> variable = <ID> type = <COMPARAISON> valeur = <ID> <THEN> {condition=1;})?
+	 {	
+
+	   	if(condition==1 && parametrePresence==0)
 	   	{
-			int res = composants.get(composants.size()-1).ajouterConditionEvenement(nom.toString(),variable.toString(),valeur.toString(),type.toString());
+	   	  	int res = composants.get(composants.size()-1).ajouterConditionEvenement(nom.toString(),variable.toString(),valeur.toString(),type.toString());
 			if(res==0)
 			{
 				//Propriete non définie 
@@ -185,9 +186,21 @@ void event():
 				//Valeur non compatible
 			}
 		}
-		else if(condition==0)
-		{
+		else if(condition==0 && parametrePresence==0)
+		{		  
 			composants.get(composants.size()-1).ajouterAffectationEvenement(nom.toString());
+		}
+		else if(condition==1 && parametrePresence==1)
+		{
+		  	int res = composants.get(composants.size()-1).ajouterConditionEvenementParametre(nom.toString(),variable.toString(),valeur.toString(),type.toString(),parametre.toString().substring(1,parametre.toString().length()-1));
+		  	if(res==0)
+			{
+			//Propriete non définie 
+			}
+			else if (res==-1)
+			{
+				//Valeur non compatible
+			}
 		}
 	 }
 	 EventAction(nom.toString()) <ACCOLADEFermante> event() | composantdeclaration()
@@ -207,8 +220,8 @@ void EventAction(String nomEvent):
  	{
    		if(egal==1 && plus==0)
    		{
-			res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
-   		}
+   		  	res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+		}
    		else if(egal==0 && plus==1)
    		{
    		  	if(nombre==1)
@@ -227,7 +240,7 @@ void EventAction(String nomEvent):
 		else if(res==0)
 		{
 			//Variable non existante
-		}
+		}	
  	}
 }
 

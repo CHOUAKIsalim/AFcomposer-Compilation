@@ -217,14 +217,15 @@ public class AFCcomposer implements AFCcomposerConstants {
   }
 
   static final public void event() throws ParseException {
-        Token nom,type=null,variable=null,valeur=null;
-        int condition = 0;
+        Token nom,type=null,variable=null,valeur=null,parametre=null;
+        int condition = 0,parametrePresence = 0;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NOMACTIONUTILISATEUR:
       nom = jj_consume_token(NOMACTIONUTILISATEUR);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PROPRIETAIRE:
-        jj_consume_token(PROPRIETAIRE);
+        parametre = jj_consume_token(PROPRIETAIRE);
+                                                                parametrePresence=1;
         break;
       default:
         jj_la1[7] = jj_gen;
@@ -238,13 +239,13 @@ public class AFCcomposer implements AFCcomposerConstants {
         type = jj_consume_token(COMPARAISON);
         valeur = jj_consume_token(ID);
         jj_consume_token(THEN);
-                                                                                                                                            condition=1;
+                                                                                                                                                                            condition=1;
         break;
       default:
         jj_la1[8] = jj_gen;
         ;
       }
-                if(condition==1)
+                if(condition==1 && parametrePresence==0)
                 {
                         int res = composants.get(composants.size()-1).ajouterConditionEvenement(nom.toString(),variable.toString(),valeur.toString(),type.toString());
                         if(res==0)
@@ -256,9 +257,21 @@ public class AFCcomposer implements AFCcomposerConstants {
                                 //Valeur non compatible
                         }
                 }
-                else if(condition==0)
+                else if(condition==0 && parametrePresence==0)
                 {
                         composants.get(composants.size()-1).ajouterAffectationEvenement(nom.toString());
+                }
+                else if(condition==1 && parametrePresence==1)
+                {
+                        int res = composants.get(composants.size()-1).ajouterConditionEvenementParametre(nom.toString(),variable.toString(),valeur.toString(),type.toString(),parametre.toString().substring(1,parametre.toString().length()-1));
+                        if(res==0)
+                        {
+                        //Propriete non définie 
+                        }
+                        else if (res==-1)
+                        {
+                                //Valeur non compatible
+                        }
                 }
       EventAction(nom.toString());
       jj_consume_token(ACCOLADEFermante);
