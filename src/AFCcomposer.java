@@ -217,9 +217,11 @@ public class AFCcomposer implements AFCcomposerConstants {
   }
 
   static final public void event() throws ParseException {
+        Token nom,type=null,variable=null,valeur=null;
+        int condition = 0;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NOMACTIONUTILISATEUR:
-      jj_consume_token(NOMACTIONUTILISATEUR);
+      nom = jj_consume_token(NOMACTIONUTILISATEUR);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case PROPRIETAIRE:
         jj_consume_token(PROPRIETAIRE);
@@ -229,12 +231,36 @@ public class AFCcomposer implements AFCcomposerConstants {
         ;
       }
       jj_consume_token(ACCOLADEOuvrante);
-      jj_consume_token(IF);
-      jj_consume_token(ID);
-      jj_consume_token(COMPARAISON);
-      jj_consume_token(ID);
-      jj_consume_token(THEN);
-      EventAction();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case IF:
+        jj_consume_token(IF);
+        variable = jj_consume_token(ID);
+        type = jj_consume_token(COMPARAISON);
+        valeur = jj_consume_token(ID);
+        jj_consume_token(THEN);
+                                                                                                                                            condition=1;
+        break;
+      default:
+        jj_la1[8] = jj_gen;
+        ;
+      }
+                if(condition==1)
+                {
+                        int res = composants.get(composants.size()-1).ajouterConditionEvenement(nom.toString(),variable.toString(),valeur.toString(),type.toString());
+                        if(res==0)
+                        {
+                                //Propriete non définie 
+                        }
+                        else if (res==-1)
+                        {
+                                //Valeur non compatible
+                        }
+                }
+                else if(condition==0)
+                {
+                        composants.get(composants.size()-1).ajouterAffectationEvenement(nom.toString());
+                }
+      EventAction(nom.toString());
       jj_consume_token(ACCOLADEFermante);
       event();
       break;
@@ -243,14 +269,19 @@ public class AFCcomposer implements AFCcomposerConstants {
       composantdeclaration();
       break;
     default:
-      jj_la1[8] = jj_gen;
+      jj_la1[9] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
   }
 
-  static final public void EventAction() throws ParseException {
-    jj_consume_token(ID);
+  static final public void EventAction(String nomEvent) throws ParseException {
+        Token variable,valeur=null,number=null,valeurString=null;
+        int egal = 0;
+        int plus = 0;
+        int nombre = 0;
+        int res=0;
+    variable = jj_consume_token(ID);
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -258,7 +289,7 @@ public class AFCcomposer implements AFCcomposerConstants {
         ;
         break;
       default:
-        jj_la1[9] = jj_gen;
+        jj_la1[10] = jj_gen;
         break label_3;
       }
       jj_consume_token(34);
@@ -267,43 +298,70 @@ public class AFCcomposer implements AFCcomposerConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case AFFECTATIONOperation:
       jj_consume_token(AFFECTATIONOperation);
-      jj_consume_token(ID);
+      valeur = jj_consume_token(ID);
+                                                                  egal = 1 ;
       break;
     default:
-      jj_la1[10] = jj_gen;
+      jj_la1[11] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case PLUS:
       jj_consume_token(PLUS);
+                                                                                        plus=1;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case NOMBRE:
-        jj_consume_token(NOMBRE);
+        number = jj_consume_token(NOMBRE);
+                                                                                                                     nombre=1;
         break;
       case APOSTROPHE:
         jj_consume_token(APOSTROPHE);
-        jj_consume_token(ID);
+        valeurString = jj_consume_token(ID);
         jj_consume_token(APOSTROPHE);
+                                                nombre=0;
         break;
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[12] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[13] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case SEPARATEUR:
       jj_consume_token(SEPARATEUR);
-      EventAction();
+      EventAction(nomEvent);
       break;
     default:
-      jj_la1[13] = jj_gen;
+      jj_la1[14] = jj_gen;
       ;
     }
+                if(egal==1 && plus==0)
+                {
+                        res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+                }
+                else if(egal==0 && plus==1)
+                {
+                        if(nombre==1)
+                        {
+                                res = composants.get(composants.size()-1).ajouterIncrementationNombre(nomEvent,variable.toString(),number.toString());
+                        }
+                }
+                else if(egal==1 & plus==1 && nombre==0)
+                {
+                        res=composants.get(composants.size()-1).ajouterIncrementationString(nomEvent,variable.toString(),valeurString.toString());
+                }
+                if(res==-1)
+                {
+                        //Valeur non compatible
+                }
+                else if(res==0)
+                {
+                        //Variable non existante
+                }
   }
 
   static final public void initialisation() throws ParseException {
@@ -327,7 +385,7 @@ public class AFCcomposer implements AFCcomposerConstants {
         valeurPropriete = jj_consume_token(NOMBRE);
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[15] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -365,7 +423,7 @@ public class AFCcomposer implements AFCcomposerConstants {
       actions();
       break;
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -388,7 +446,7 @@ public class AFCcomposer implements AFCcomposerConstants {
         ;
         break;
       default:
-        jj_la1[16] = jj_gen;
+        jj_la1[17] = jj_gen;
         break label_4;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -402,7 +460,7 @@ public class AFCcomposer implements AFCcomposerConstants {
         jj_consume_token(PLUS);
         break;
       default:
-        jj_la1[17] = jj_gen;
+        jj_la1[18] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -421,7 +479,7 @@ public class AFCcomposer implements AFCcomposerConstants {
       jj_consume_token(ACCOLADEFermante);
       break;
     default:
-      jj_la1[18] = jj_gen;
+      jj_la1[19] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -452,7 +510,7 @@ public class AFCcomposer implements AFCcomposerConstants {
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[19];
+  static final private int[] jj_la1 = new int[20];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -460,10 +518,10 @@ public class AFCcomposer implements AFCcomposerConstants {
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x10000,0x8000000,0x1100,0x0,0x0,0x2040000,0x400400,0x10000,0x81100,0x0,0x1000000,0x40200000,0x20000000,0x8000000,0x600000,0x402000,0x28000000,0x28000000,0x2080000,};
+      jj_la1_0 = new int[] {0x10000,0x8000000,0x1100,0x0,0x0,0x2040000,0x400400,0x10000,0x8000,0x81100,0x0,0x1000000,0x40200000,0x20000000,0x8000000,0x600000,0x402000,0x28000000,0x28000000,0x2080000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x0,0x0,0x0,0x2,0x2,0x0,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x2,0x2,0x0,0x0,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -484,7 +542,7 @@ public class AFCcomposer implements AFCcomposerConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -498,7 +556,7 @@ public class AFCcomposer implements AFCcomposerConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -515,7 +573,7 @@ public class AFCcomposer implements AFCcomposerConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -525,7 +583,7 @@ public class AFCcomposer implements AFCcomposerConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -541,7 +599,7 @@ public class AFCcomposer implements AFCcomposerConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -550,7 +608,7 @@ public class AFCcomposer implements AFCcomposerConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 19; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 20; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -606,7 +664,7 @@ public class AFCcomposer implements AFCcomposerConstants {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 19; i++) {
+    for (int i = 0; i < 20; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

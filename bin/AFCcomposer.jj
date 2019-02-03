@@ -167,13 +167,69 @@ void startEvent(): {} {<EVT> event()}
 
 void event():
 { 
-
+	Token nom,type=null,variable=null,valeur=null;
+	int condition = 0;
 }
 {
-	 <NOMACTIONUTILISATEUR> (<PROPRIETAIRE>)? <ACCOLADEOuvrante> <IF> <ID><COMPARAISON><ID> <THEN> EventAction() <ACCOLADEFermante> event() | composantdeclaration()
+	 nom = <NOMACTIONUTILISATEUR> (<PROPRIETAIRE>)? <ACCOLADEOuvrante> (<IF> variable = <ID> type = <COMPARAISON> valeur = <ID> <THEN> {condition=1;})?
+	 {
+	   	if(condition==1)
+	   	{
+			int res = composants.get(composants.size()-1).ajouterConditionEvenement(nom.toString(),variable.toString(),valeur.toString(),type.toString());
+			if(res==0)
+			{
+				//Propriete non définie 
+			}
+			else if (res==-1)
+			{
+				//Valeur non compatible
+			}
+		}
+		else if(condition==0)
+		{
+			composants.get(composants.size()-1).ajouterAffectationEvenement(nom.toString());
+		}
+	 }
+	 EventAction(nom.toString()) <ACCOLADEFermante> event() | composantdeclaration()
 }
 
-void EventAction(): {} { <ID>("."<ID>)* (<AFFECTATIONOperation><ID>)? (<PLUS>(<NOMBRE>|<APOSTROPHE><ID><APOSTROPHE>))?    (<SEPARATEUR>EventAction())? }
+void EventAction(String nomEvent):
+{
+	Token variable,valeur=null,number=null,valeurString=null;
+	int egal = 0;
+	int plus = 0;
+	int nombre = 0;
+	int res=0;
+}
+{
+  variable = <ID>("."<ID>)* (<AFFECTATIONOperation>valeur = <ID> {egal = 1 ;})? (<PLUS>{plus=1; }(number = <NOMBRE> {nombre=1;}
+  |<APOSTROPHE>valeurString = <ID><APOSTROPHE> {nombre=0;}) )?    (<SEPARATEUR>EventAction(nomEvent))?
+ 	{
+   		if(egal==1 && plus==0)
+   		{
+			res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+   		}
+   		else if(egal==0 && plus==1)
+   		{
+   		  	if(nombre==1)
+   		  	{
+   		  		res = composants.get(composants.size()-1).ajouterIncrementationNombre(nomEvent,variable.toString(),number.toString());
+   		  	}
+   		}
+   		else if(egal==1 & plus==1 && nombre==0)
+	  	{
+  			res=composants.get(composants.size()-1).ajouterIncrementationString(nomEvent,variable.toString(),valeurString.toString());
+	  	}
+   		if(res==-1)
+   		{
+			//Valeur non compatible
+   		}
+		else if(res==0)
+		{
+			//Variable non existante
+		}
+ 	}
+}
 
 void initialisation(): {} { <INIT> actionInit()}
 
