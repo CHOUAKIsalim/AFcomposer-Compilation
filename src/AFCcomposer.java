@@ -2,7 +2,48 @@
 import java.util.ArrayList;
 
 public class AFCcomposer implements AFCcomposerConstants {
+        public static ArrayList<Etat> etats = new ArrayList<Etat>();
         public static ArrayList<Composant> composants  =  new ArrayList<Composant>();
+        public static ArrayList<Transition> transitions = new ArrayList<Transition>();
+        public static Automate automate;
+
+        public static void gotoEtat(int i)
+        {
+                for(int j=0 ; j <composants.size() ;j++)
+                {
+//	  	  System.out.println("aaa");
+                        composants.get(j).gotoEtat(etats.get(i).getComposants().get(j));
+        //  	  System.out.println("aaa");
+
+                }
+        }
+
+        public static int enregistrerEtat()
+        {
+                Etat x = new Etat(composants);
+
+                int j=0;
+
+                boolean trouv = false;
+                while(!trouv && j<etats.size())
+                {
+                        if(etats.get(j).equals(x))
+                        {
+                                trouv = true;
+                        }
+                        j++;
+                }
+                if(trouv)
+                {
+                        return(j-1);
+                }
+                else
+                {
+                        etats.add(x);
+                        return etats.size()-1;
+                }
+        }
+
         public static void main(String args []) throws ParseException
         {
         AFCcomposer parser = new AFCcomposer(System.in);
@@ -67,7 +108,7 @@ public class AFCcomposer implements AFCcomposerConstants {
         proprietaire = jj_consume_token(PROPRIETAIRE);
                 i=0;
                 trouv=false;
-                while(!trouv && i<composants.size()-1)
+                while(!trouv && i<composants.size())
                 {
                                 if(composants.get(i).getNom().compareTo(proprietaire.toString())==0)
                                 {
@@ -289,11 +330,12 @@ public class AFCcomposer implements AFCcomposerConstants {
   }
 
   static final public void EventAction(String nomEvent) throws ParseException {
-        Token variable,valeur=null,number=null,valeurString=null;
+        Token variable,valeur=null,number=null,valeurString=null,attribut=null;
         int egal = 0;
         int plus = 0;
         int nombre = 0;
         int res=0;
+        int isAttribut=0;
     variable = jj_consume_token(ID);
     label_3:
     while (true) {
@@ -306,13 +348,14 @@ public class AFCcomposer implements AFCcomposerConstants {
         break label_3;
       }
       jj_consume_token(34);
-      jj_consume_token(ID);
+      attribut = jj_consume_token(ID);
+                                       isAttribut=1;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case AFFECTATIONOperation:
       jj_consume_token(AFFECTATIONOperation);
       valeur = jj_consume_token(ID);
-                                                                  egal = 1 ;
+                                                                                              egal = 1 ;
       break;
     default:
       jj_la1[11] = jj_gen;
@@ -321,11 +364,11 @@ public class AFCcomposer implements AFCcomposerConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case PLUS:
       jj_consume_token(PLUS);
-                                                                                        plus=1;
+                                                                                                                    plus=1;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case NOMBRE:
         number = jj_consume_token(NOMBRE);
-                                                                                                                     nombre=1;
+                                                                                                                                                 nombre=1;
         break;
       case APOSTROPHE:
         jj_consume_token(APOSTROPHE);
@@ -354,7 +397,14 @@ public class AFCcomposer implements AFCcomposerConstants {
     }
                 if(egal==1 && plus==0)
                 {
-                        res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+                        if(isAttribut==1)
+                        {
+                                res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString()+"."+attribut.toString());
+                        }
+                        else
+                        {
+                                res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+                        }
                 }
                 else if(egal==0 && plus==1)
                 {
@@ -443,13 +493,15 @@ public class AFCcomposer implements AFCcomposerConstants {
   }
 
   static final public void actions() throws ParseException {
+          AFCcomposer.enregistrerEtat();
     jj_consume_token(ACT);
-    action();
+    action(0);
     fin();
   }
 
-  static final public void action() throws ParseException {
-    element();
+  static final public int action(int i) throws ParseException {
+        int tmp,res=-1;
+    tmp = element(i);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -465,30 +517,35 @@ public class AFCcomposer implements AFCcomposerConstants {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case SEPARATEUR:
         jj_consume_token(SEPARATEUR);
+        res = element(tmp);
         break;
       case TILDE:
         jj_consume_token(TILDE);
+        res = element(i);
         break;
       case PLUS:
         jj_consume_token(PLUS);
+        res = element(i);
         break;
       default:
         jj_la1[18] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      element();
     }
+                {if (true) return res;}
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void element() throws ParseException {
+  static final public int element(int i) throws ParseException {
+                     int res;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NOMACTIONUTILISATEUR:
-      operation();
+      res = operation(i);
       break;
     case ACCOLADEOuvrante:
       jj_consume_token(ACCOLADEOuvrante);
-      action();
+      res = action(i);
       jj_consume_token(ACCOLADEFermante);
       break;
     default:
@@ -496,21 +553,47 @@ public class AFCcomposer implements AFCcomposerConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
+                {if (true) return res;}
+    throw new Error("Missing return statement in function");
   }
 
-  static final public void operation() throws ParseException {
-    jj_consume_token(NOMACTIONUTILISATEUR);
-    jj_consume_token(PROPRIETAIRE);
+  static final public int operation(int i) throws ParseException {
+        Token composant,action;
+    action = jj_consume_token(NOMACTIONUTILISATEUR);
+    composant = jj_consume_token(PROPRIETAIRE);
+                gotoEtat(i);
+                int j=0;
+                boolean trouv=false;
+                        while(!trouv && j<composants.size())
+                {
+
+                  if(composants.get(j).getNom().compareTo(composant.toString().substring(1,composant.toString().length()-1))==0)
+                                {
+
+                                        int res = composants.get(j).executerAction(action.toString());
+
+                                        if (res==0)
+                                        {
+                                                System.out.println("Action non existante" + action.toString() +" "+composant.toString());
+                                        }
+                                        int tmp = enregistrerEtat();
+                                        transitions.add(new Transition(i,tmp));
+                                        {if (true) return tmp;}
+                                }
+                                j++;
+                }
+                        if(!trouv)
+                        {
+                          {if (true) return -1;}
+                                                        System.out.println("Composant non existant");//Composant non existant 
+                        }
+                        {if (true) return -1;}
+    throw new Error("Missing return statement in function");
   }
 
   static final public void fin() throws ParseException {
     jj_consume_token(FIN);
-                System.out.println(composants.size());
-                for(int i=0; i<composants.size(); i++)
-                {
-                        System.out.println(composants.get(i).getNom()+"  "+composants.get(i).getType());
-                        composants.get(i).afficherProprietes();
-                }
+                automate= new Automate(etats,transitions);
   }
 
   static private boolean jj_initialized_once = false;

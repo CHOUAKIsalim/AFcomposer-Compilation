@@ -2,8 +2,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
-public class Composant
+public class Composant implements Cloneable
 {
     private String nom ;
     private String type ;
@@ -11,6 +12,7 @@ public class Composant
     private HashMap <String, Propriete> proprietes ;
     private HashMap <String, Evenement> evenements ;
 
+    
     public Composant(String nom, String type)
     {
         this.nom = nom ;
@@ -19,7 +21,36 @@ public class Composant
         this.evenements = new HashMap<String, Evenement>() ;
     }
     
-    
+    public void setProprietes(HashMap <String, Propriete> proprietes)
+    {
+    	this.proprietes = proprietes;
+    }
+
+    public void setProprietaire(Composant proprietaire)
+    {
+    	this.proprietaire=proprietaire;
+    }
+
+    public HashMap <String, Propriete> getProprietes()
+    {
+    	return this.proprietes;
+    }
+
+    public String getNom()
+    {
+    	return this.nom;
+    }
+
+    public String getType()
+    {
+    	return this.type;
+    }
+
+    public int getNb()
+    {
+    	return this.evenements.size();
+    }
+
     public void ajouterProprietes(ArrayList<String> noms, ArrayList<String> types )
     {
     	if(types.get(0).toLowerCase().compareTo("boolean")==0 || types.get(0).toLowerCase().compareTo("bool")==0)
@@ -46,16 +77,6 @@ public class Composant
     	}
 
     }
-
-    public String getNom()
-    {
-    	return this.nom;
-    }
-
-    public String getType()
-    {
-    	return this.type;
-    }
     
     public int initialiserPropriete(String nomPropriete, String valeurPropriete)
     {
@@ -68,13 +89,7 @@ public class Composant
     		return 0;
     	}
     }
-
     
-    public void setProprietaire(Composant proprietaire)
-    {
-    	this.proprietaire=proprietaire;
-    }
-
     public int ajouterConditionEvenement(String nomEvenement, String variableCondition, String valeurCondition, String type)
     {
     	if(this.proprietes.containsKey(variableCondition))
@@ -140,7 +155,7 @@ public class Composant
     		return 0;
     	}
     }
-
+    
     public int ajouterIncrementationNombre(String nomEvent,String variable, String nombre)
     {
     	if(this.proprietes.containsKey(variable))
@@ -148,7 +163,7 @@ public class Composant
     		if(this.proprietes.get(variable).compatible(nombre))
     		{
     			this.evenements.get(nomEvent).ajouterIncrementationNombre(this.proprietes.get(variable),nombre);
-    	    	return 1;
+    			return 1;
     		}
     		else
     		{
@@ -183,26 +198,108 @@ public class Composant
     	
     }
 
-    
-    public void afficherProprietes()
+    public int executerAction(String action) 
     {
-    	Iterator iterator = this.evenements.entrySet().iterator();
-    	
-    	while (iterator.hasNext()) 
+    	if(this.evenements.containsKey(action))
     	{
-    			Map.Entry mapentry = (Map.Entry) iterator.next();
-    		//	Propriete propriete = (Propriete) mapentry.getValue();
-    			Evenement evenement = (Evenement) mapentry.getValue();
-    //			System.out.println(evenement.getClass());
-//    			propriete.afficher();
-    			evenement.afficherActions();
-    	} 
+    		this.evenements.get(action).executer(this);
+    		return 1;
+    	}
+    	else
+    	{
+    		return 0;
+    	}
     }
-    
-    public int getNb()
+        
+    public Object clone() 
     {
-    	return this.evenements.size();
+    	Composant res;
+		try
+		{
+			res = (Composant) super.clone();
+	    	HashMap <String, Propriete> resproprietes  = new HashMap<String, Propriete>();
+	    	Iterator iterator = this.proprietes.entrySet().iterator();
+	    	while (iterator.hasNext()) 
+	    	{   	
+	    		Map.Entry mapentry = (Map.Entry) iterator.next();
+				Propriete propriete = (Propriete) mapentry.getValue();
+				Propriete x = (Propriete)propriete.clone();
+				resproprietes.put((String)mapentry.getKey(), x);
+	    	} 
+	    	res.setProprietes(resproprietes);
+	    	return res;
+
+		}
+		catch (CloneNotSupportedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
     }
 
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}		
+
+		Composant other = (Composant) obj;
+
+		Iterator iterator = this.proprietes.entrySet().iterator();
+		Iterator iterator2 = other.getProprietes().entrySet().iterator();
+
+		while (iterator.hasNext()) 
+    	{  
+    		Map.Entry mapentry = (Map.Entry) iterator.next();
+    		Map.Entry mapentry2 = (Map.Entry) iterator2.next();
+			
+    		Propriete propriete = (Propriete) mapentry.getValue();
+    		Propriete propriete2 = (Propriete) mapentry2.getValue();
+    
+    		if(!propriete.equals(propriete2))
+    			{
+    				return false;
+    			}
+    
+    	} 
+		
+		return true;
+	}
+
+	public void gotoEtat(Composant c)
+	{
+
+		Iterator iterator = this.proprietes.entrySet().iterator();
+		Iterator iterator2 = c.getProprietes().entrySet().iterator();
+
+		while (iterator.hasNext()) 
+    	{  
+    		Map.Entry mapentry = (Map.Entry) iterator.next();
+    		Map.Entry mapentry2 = (Map.Entry) iterator2.next();
+			
+    		Propriete propriete = (Propriete) mapentry.getValue();
+    		Propriete propriete2 = (Propriete) mapentry2.getValue();
+    		propriete.gotoEtat(propriete2);
+    	} 
+		
+	}
+	public void affichier()
+	{
+		System.out.println("--------------------------------------------"+nom+type);
+		Set cles = proprietes.keySet();
+		Iterator it = cles.iterator();
+		while (it.hasNext()){
+		   Object cle = it.next(); // tu peux typer plus finement ici
+		   proprietes.get(cle).afficher();
+		
+		}
+	
+	}
 
 }

@@ -25,12 +25,15 @@ public abstract class Evenement
 		this.operations.add(new IncrementationString(variable, valeur));		
 	}
 
-	public void afficherActions()
+	protected void executerOperations(Composant c)
 	{
-		System.out.println("----------------------------------------------------------------------------------------------------------");
-		for(int i=0; i<operations.size();i++)
-		System.out.println(operations.get(i).getClass());
-		System.out.println("----------------------------------------------------------------------------------------------------------");
+		for(int i=0; i<operations.size(); i++)
+		{
+			this.operations.get(i).executer(c);
+		}
 	}
-
+	
+	public abstract void executer(Composant c);
+		
+	
 }

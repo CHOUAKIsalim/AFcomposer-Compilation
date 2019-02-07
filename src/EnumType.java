@@ -26,14 +26,4 @@ public class EnumType extends TypePropriete
 		}
 		return trouv;
 	}
-
-	public void afficher()
-	{
-		System.out.println("Affichage de la liste des valeurs possibles :");
-		for (int i=0; i<valeursPossibles.size(); i++)
-		{
-			System.out.println(valeursPossibles.get(i));
-		}
-			
-	}
 }

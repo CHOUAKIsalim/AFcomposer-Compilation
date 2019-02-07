@@ -7,7 +7,48 @@
 }	PARSER_BEGIN(AFCcomposer)import java.util.ArrayList;
 
 public class AFCcomposer{
-  	public static ArrayList<Composant> composants  =  new ArrayList<Composant>(); 	public static void main(String args []) throws ParseException  	{    	AFCcomposer parser = new AFCcomposer(System.in);   	 	while (true)	    { 		      try		      {
+  	public static ArrayList<Etat> etats = new ArrayList<Etat>();
+  	public static ArrayList<Composant> composants  =  new ArrayList<Composant>();	public static ArrayList<Transition> transitions = new ArrayList<Transition>();
+	public static Automate automate;
+	
+	public static void gotoEtat(int i)
+	{
+	  	for(int j=0 ; j <composants.size() ;j++)
+	  	{
+//	  	  System.out.println("aaa");
+			composants.get(j).gotoEtat(etats.get(i).getComposants().get(j));
+	//  	  System.out.println("aaa");
+
+	  	}
+	}
+	
+	public static int enregistrerEtat()
+	{
+	  	Etat x = new Etat(composants);
+
+	  	int j=0;
+	 
+		boolean trouv = false;
+		while(!trouv && j<etats.size())
+		{
+		 	if(etats.get(j).equals(x))
+		 	{
+				trouv = true;
+		 	}
+		 	j++;
+		}
+		if(trouv)
+		{
+			return(j-1);
+		}
+		else
+		{
+			etats.add(x);
+			return etats.size()-1;
+		}
+	}
+	
+ 	public static void main(String args []) throws ParseException  	{    	AFCcomposer parser = new AFCcomposer(System.in);   	 	while (true)	    { 		      try		      {
 		        	AFCcomposer.start();		      }
 		      catch (Error e)
 		      {
@@ -78,7 +119,7 @@ void composantdeclaration():
 	 	{
 	    	i=0;
 	    	trouv=false;
-	    	while(!trouv && i<composants.size()-1)
+	    	while(!trouv && i<composants.size())
 	    	{
 				if(composants.get(i).getNom().compareTo(proprietaire.toString())==0)
 				{
@@ -208,19 +249,27 @@ void event():
 
 void EventAction(String nomEvent):
 {
-	Token variable,valeur=null,number=null,valeurString=null;
+	Token variable,valeur=null,number=null,valeurString=null,attribut=null;
 	int egal = 0;
 	int plus = 0;
 	int nombre = 0;
 	int res=0;
+	int isAttribut=0;
 }
 {
-  variable = <ID>("."<ID>)* (<AFFECTATIONOperation>valeur = <ID> {egal = 1 ;})? (<PLUS>{plus=1; }(number = <NOMBRE> {nombre=1;}
+  variable   = <ID> ("."attribut=<ID> {isAttribut=1;})* (<AFFECTATIONOperation>valeur = <ID> {egal = 1 ;})? (<PLUS>{plus=1; }(number = <NOMBRE> {nombre=1;}
   |<APOSTROPHE>valeurString = <ID><APOSTROPHE> {nombre=0;}) )?    (<SEPARATEUR>EventAction(nomEvent))?
  	{
    		if(egal==1 && plus==0)
    		{
-   		  	res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+   		  	if(isAttribut==1)
+   		  	{
+	   		  	res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString()+"."+attribut.toString());
+   		  	}
+			else
+			{
+	   		  	res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
+			}		
 		}
    		else if(egal==0 && plus==1)
    		{
@@ -286,21 +335,74 @@ void actionInit():
 
 } 
 
-void actions(): {} {<ACT> action() fin()}
+void actions(): {}
+{
+  {   
+	  AFCcomposer.enregistrerEtat();
+  }
+  
+  <ACT> action(0) fin() //Au début en fait selon l'etat 0
+}
 
-void action(): {} {     element() ( (<SEPARATEUR>|<TILDE>|<PLUS>) element())* }
+int action(int i):
+{
+  	int tmp,res=-1;
+}
+{    
+  	tmp=element(i) ( (<SEPARATEUR>res=element(tmp)|<TILDE>res=element(i)|<PLUS>res=element(i)) )*
+  	{
+ 		return res;
+  	}
+}
 
-void element(): {} { operation() | <ACCOLADEOuvrante> action() <ACCOLADEFermante>  }
+int element(int i): {int res;}	
+{
+  
+  ( res =operation(i)  | <ACCOLADEOuvrante> res = action(i) <ACCOLADEFermante> )
+  {
+ 		return res;
+  }
+}
 
-void operation(): {} {<NOMACTIONUTILISATEUR><PROPRIETAIRE>}
+int operation(int i):
+{
+	Token composant,action; 
+}
+{  
+  action = <NOMACTIONUTILISATEUR> composant= <PROPRIETAIRE>
+	  {
+	    	gotoEtat(i);
+	    	int j=0;
+	    	boolean trouv=false;
+			while(!trouv && j<composants.size())
+	    	{
+	    	
+	    	  if(composants.get(j).getNom().compareTo(composant.toString().substring(1,composant.toString().length()-1))==0)
+				{
+				  
+				  	int res = composants.get(j).executerAction(action.toString());
+
+					if (res==0)
+					{
+						System.out.println("Action non existante" + action.toString() +" "+composant.toString());	
+					}
+					int tmp = enregistrerEtat();
+					transitions.add(new Transition(i,tmp));
+					return tmp;		
+				}
+				j++;
+	    	}
+			if(!trouv)
+			{
+			  return -1;
+			  				System.out.println("Composant non existant");//Composant non existant 
+			}
+			return -1;
+	  }
+}
 
 void fin(): {} {<FIN>
 	{
-		System.out.println(composants.size());
-		for(int i=0; i<composants.size(); i++)
-		{
-			System.out.println(composants.get(i).getNom()+"  "+composants.get(i).getType());
-			composants.get(i).afficherProprietes();
-		}
-}
+		automate= new Automate(etats,transitions);
+	}
 }

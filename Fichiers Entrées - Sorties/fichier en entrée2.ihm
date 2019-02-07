@@ -1,0 +1,85 @@
+DEBUT
+INTERFACE
+COMP FenP : Fenetre ; 
+	PROP
+		Position : {Agrd, Red, Ferm} ;
+		Visible : Boolean ;
+		Xpos, Ypos : int;
+	EVT
+		ClickBtFerm {if Position<>Ferm then Position := Ferm}
+		ClickBtRed {if Position=Agrd then Position := Red}
+		ClickBtArg {if Position=Red then Position := Agrd}
+		ClickTitre {if Visible = False then Visible := True}
+
+COMP MenuH : Menu (FenP)
+	PROP
+		ItemChoisi : {Fichier, Commande, Designation, Information, Calcul, Option};
+		Actif, Visible : Bool; 
+	EVT
+		Click(item) {if Actif = True Then ItemChoisi := item ; item.deployer := True }
+
+COMP Commande : Menu (MenuH) ;
+	PROP
+		Option : {Projection, Distance}; 
+		Deployer : Bool;
+	EVET 
+		Click (item) {if Deployer = True then Option := item } 
+		EnterPress (item) {if Deployer = True Then Option := item }
+
+COMP Plan : Caneva (FenP)  
+	PROP 
+		NbreObjet : int; 
+		ListObjet : {Aucun, Cercle, Point, Segment, Rectangle}; 
+		Actif : Bool; 
+	EVET 
+		Click {If Actif = True Then NbreObjet+1 ;
+					ListObjet := ListObjet + 'Point' }
+		Drag {if Actif = True Then ListObjet := ListObjet + 'Segment' ;
+					NbreObjet + 1 }
+
+COMP BtProjection : Bouton (FenP) 
+	PROP 
+		Etat : {Actif, Enfoncer} ;
+	EVT 
+		Click {If Etat = Actif Then Etat := Enfoncer }
+
+COMP BtDistance : Bouton (FenP) 
+	PROP
+		Etat : {Actif, Enfoncer} ;
+	EVT 
+		Click {If Etat = Actif Then Etat := Enfoncer } 
+
+INITIALISATIONS 
+	FenP::Position := Agrd;  
+	FenP::Visible :=True; 
+	FenP::Xpos := 10;  
+	Fenp::Ypos := 10;
+	Commande::Option := Projection; 
+	Commande::Deployer := False;
+	MenuH::ItemChoisi := Fichier; 
+	MenuH::Actif := False; 
+	MenuH::Visible := True; 
+	Plan::NbreObjet :=0; 
+	Plan::ListObjet := Aucun; 
+	Plan::Actif := True; 
+	BtProjection::Etat := Actif; 
+	BtDistance::Etat := Actif; 
+
+ACTIONS
+	{
+		Click(Plan); 
+		Drag(Plan) 
+	}
+	+
+	{
+			Click(BtProjection) ~ 
+			{
+				Click (Commande); 
+				Click (Projection)
+			}
+	}	
+	+
+	Click(BtDistance)  
+		
+
+FIN

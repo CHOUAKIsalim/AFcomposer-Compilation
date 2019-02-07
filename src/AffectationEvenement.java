@@ -7,4 +7,10 @@ public class AffectationEvenement extends Evenement
 		super(nom);
 	}
 
+	@Override
+	public void executer(Composant c)
+	{
+		super.executerOperations(c);
+	}
+
 }

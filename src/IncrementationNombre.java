@@ -10,4 +10,11 @@ public class IncrementationNombre extends Operation
 		this.nombreSource = nombreSource;
 	}
 
+	@Override
+	public void executer(Composant c)
+	{
+		c.getProprietes().get(super.getDestination().getNom()).setValeur(Integer.parseInt(c.getProprietes().get(super.getDestination().getNom()).getValeur())+Integer.parseInt(nombreSource)+"");
+
+	}
+
 }

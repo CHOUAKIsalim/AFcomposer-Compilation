@@ -9,4 +9,10 @@ public class IncrementationString extends Operation
 		this.stringSource = stringSource;
 	}
 
+	@Override
+	public void executer(Composant c)
+	{
+		super.getDestination().setValeur(super.getDestination().getValeur() + stringSource);
+	}
+
 }
