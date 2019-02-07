@@ -1,408 +1,0 @@
-/**
- * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
- */
-
-options{
-   LOOKAHEAD=1;  static = true;
-}	PARSER_BEGIN(AFCcomposer)import java.util.ArrayList;
-
-public class AFCcomposer{
-  	public static ArrayList<Etat> etats = new ArrayList<Etat>();
-  	public static ArrayList<Composant> composants  =  new ArrayList<Composant>();	public static ArrayList<Transition> transitions = new ArrayList<Transition>();
-	public static Automate automate;
-	
-	public static void gotoEtat(int i)
-	{
-	  	for(int j=0 ; j <composants.size() ;j++)
-	  	{
-//	  	  System.out.println("aaa");
-			composants.get(j).gotoEtat(etats.get(i).getComposants().get(j));
-	//  	  System.out.println("aaa");
-
-	  	}
-	}
-	
-	public static int enregistrerEtat()
-	{
-	  	Etat x = new Etat(composants);
-
-	  	int j=0;
-	 
-		boolean trouv = false;
-		while(!trouv && j<etats.size())
-		{
-		 	if(etats.get(j).equals(x))
-		 	{
-				trouv = true;
-		 	}
-		 	j++;
-		}
-		if(trouv)
-		{
-			return(j-1);
-		}
-		else
-		{
-			etats.add(x);
-			return etats.size()-1;
-		}
-	}
-	
- 	public static void main(String args []) throws ParseException  	{    	AFCcomposer parser = new AFCcomposer(System.in);   	 	while (true)	    { 		      try		      {
-		        	AFCcomposer.start();		      }
-		      catch (Error e)
-		      {
-			        System.out.println("Oops.");
-			        System.out.println(e.getMessage());
-			        break;
-		      }		      catch (Exception e)		      {			        System.out.println("NOK.");			        System.out.println(e.getMessage());			        AFCcomposer.ReInit(System.in);		      }	    }  	}}PARSER_END(AFCcomposer)SKIP :{  " "| "\r"| "\t"| "\n"}
-TOKEN : /* Mots Clé */{  < DEBUT : "DEBUT" >| < FIN : "FIN" >| < INTERFACE : "INTERFACE" >| < COMP : "COMP" >
-| < PROP : "PROP" >
-| < EVT : "EVT" | "EVET" >
-| < INV : "INV" > // On en a pas parlé dans le texte ! ! ! !
-| < INIT : "INITIALISATIONS" >
-| < ACT : "ACTIONS" >}TOKEN : //Composant{
-  < THEN : "then" | "THEN" | "Then">  
-| < IF : "if" |"If" |"IF" >
-| < PROPRIETAIRE : "(" <ID> ")" >| < TYPE : "Fenetre" | "Boite Dialogue" | "Panel" | "Bouton" | "Champs Texte" | "Combo Box" | "Liste Deroulante" | "Case a Cocher" | "Bouton Radio" | "Icone" | "Menu" | "Caneva" >| < PROPERTYTYPE : "Boolean" | "int" | "Bool" >
-| < NOMACTIONUTILISATEUR : ( "Click" | "Double Click" | "ChrKeyPress" | "NumKeyPress" | "EnterKeyPress" | "Drag" | "Drop" | "EnterPress" | "DbClick") ((<ID>)?) >
-
-}
-TOKEN : /* General */
-{
-  < LETTRE: ["a"-"z", "A"-"Z"] >
-| < NOMBRE : (["0" - "9"])+ >
-| < ID : (<LETTRE>)+ >
-| < COMPARAISON : "<>" | "=" | "<" | ">" | "<=" | ">=" >
-| < AFFECTATIONOperation : ":=" >
-| < ACCOLADEOuvrante : "{" >
-| < ACCOLADEFermante : "}" >
-| < SEPARATEUR : ";" >
-| < DeuxPoints : ":" >
-| < PLUS : "+" >
-| < APOSTROPHE : "'" >
-| < ACCESATTRIBUT : "::" >
-| < TILDE : "~" >	
-}
-
-void start(): {} {<DEBUT> Interface()}
-
-void Interface(): {} { <INTERFACE> composantdeclaration() }
-
-void composantdeclaration():
-{
-	Token nom, type, proprietaire;
-	Composant comp;
-}
-{
-  	<COMP> nom=<ID> <DeuxPoints> type=<TYPE> 
-  	{
-		  	int i=0;
-	    	boolean trouv=false;
-	    	while(!trouv && i<composants.size())
-	    	{
-				if(composants.get(i).getNom().compareTo(nom.toString())==0)
-				{
-				  	trouv = true;
-				  	//Composant déja existant ! ! ! ! 
-				}
-				i++;
-	    	}
-			if(!trouv)
-			{
-				comp = new Composant(nom.toString(),type.toString());
-				composants.add(comp);
-			}
- 	}
- 	(
-	 	proprietaire = <PROPRIETAIRE>
-	 	{
-	    	i=0;
-	    	trouv=false;
-	    	while(!trouv && i<composants.size())
-	    	{
-				if(composants.get(i).getNom().compareTo(proprietaire.toString())==0)
-				{
-				  	trouv = true;
-				  	composants.get(i).setProprietaire(composants.get(i));
-				}
-				i++;
-	    	}
-			if(!trouv)
-			{
-				//Proprietaire non existant
-			}
-				
-		}
- 	)?
-	(<SEPARATEUR>)? 													
-  	startPropriete() | initialisation()
-}
-
-void startPropriete(): {} {<PROP> propriete()}
-
-void propriete():
-{
-	Token nom, type;
-	ArrayList<String> types = new ArrayList<String>();
-	ArrayList<String> noms = new ArrayList<String>();
-}
-{
-  	nom = <ID> {noms.add(nom.toString());}
- 	(", " nom = <ID>
- 		{
-	    	int i=0;
-	    	boolean trouv=false;
-	    	while(!trouv && i<noms.size())
-	    	{
-				if(noms.get(i).compareTo(nom.toString())==0)
-				{
-				  	trouv = true;
-				}
-				i++;
-	    	}
-	    	if(!trouv)
-	    	{
-    	   	  		noms.add(nom.toString());
-	   		}
-	   		else  		  
-			{
-			  		//deux attributs avec le meme nom
-			}
- 	  	}
-  	)*
-
-  	<DeuxPoints>
-  	(type = <PROPERTYTYPE> {types.add(type.toString());}
-  	| <ACCOLADEOuvrante> (type = <ID> {types.add(type.toString());})(", "(type = <ID>
-  	{
-			int i=0;
-	    	boolean trouv=false;
-	    	while(!trouv && i<types.size())
-	    	{
-				if(types.get(i).compareTo(type.toString())==0)
-				{
-				  	trouv = true;
-				}
-				i++;
-	    	}
-	    	if(!trouv)
-	    	{
-    	   	  		types.add(type.toString());
-	   		}
-	   		else  		  
-			{
-			  		//deux attributs avec le meme nom
-			}
-	}
-  	))* <ACCOLADEFermante>  )
-  	<SEPARATEUR>
-  	{
-		composants.get(composants.size()-1).ajouterProprietes(noms,types);
-  	}
-  	propriete() | startEvent()
-
-}
-
-void startEvent(): {} {<EVT> event()}
-
-void event():
-{ 
-	Token nom,type=null,variable=null,valeur=null,parametre=null;
-	int condition = 0,parametrePresence = 0;
-}
-{
-	 nom = <NOMACTIONUTILISATEUR> (parametre=<PROPRIETAIRE>{parametrePresence=1;})? <ACCOLADEOuvrante> (<IF> variable = <ID> type = <COMPARAISON> valeur = <ID> <THEN> {condition=1;})?
-	 {	
-
-	   	if(condition==1 && parametrePresence==0)
-	   	{
-	   	  	int res = composants.get(composants.size()-1).ajouterConditionEvenement(nom.toString(),variable.toString(),valeur.toString(),type.toString());
-			if(res==0)
-			{
-				//Propriete non définie 
-			}
-			else if (res==-1)
-			{
-				//Valeur non compatible
-			}
-		}
-		else if(condition==0 && parametrePresence==0)
-		{		  
-			composants.get(composants.size()-1).ajouterAffectationEvenement(nom.toString());
-		}
-		else if(condition==1 && parametrePresence==1)
-		{
-		  	int res = composants.get(composants.size()-1).ajouterConditionEvenementParametre(nom.toString(),variable.toString(),valeur.toString(),type.toString(),parametre.toString().substring(1,parametre.toString().length()-1));
-		  	if(res==0)
-			{
-			//Propriete non définie 
-			}
-			else if (res==-1)
-			{
-				//Valeur non compatible
-			}
-		}
-	 }
-	 EventAction(nom.toString()) <ACCOLADEFermante> event() | composantdeclaration()
-}
-
-void EventAction(String nomEvent):
-{
-	Token variable,valeur=null,number=null,valeurString=null,attribut=null;
-	int egal = 0;
-	int plus = 0;
-	int nombre = 0;
-	int res=0;
-	int isAttribut=0;
-}
-{
-  variable   = <ID> ("."attribut=<ID> {isAttribut=1;})* (<AFFECTATIONOperation>valeur = <ID> {egal = 1 ;})? (<PLUS>{plus=1; }(number = <NOMBRE> {nombre=1;}
-  |<APOSTROPHE>valeurString = <ID><APOSTROPHE> {nombre=0;}) )?    (<SEPARATEUR>EventAction(nomEvent))?
- 	{
-   		if(egal==1 && plus==0)
-   		{
-   		  	if(isAttribut==1)
-   		  	{
-	   		  	res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString()+"."+attribut.toString());
-   		  	}
-			else
-			{
-	   		  	res=composants.get(composants.size()-1).ajouterAffectation(nomEvent,variable.toString(),valeur.toString());
-			}		
-		}
-   		else if(egal==0 && plus==1)
-   		{
-   		  	if(nombre==1)
-   		  	{
-   		  		res = composants.get(composants.size()-1).ajouterIncrementationNombre(nomEvent,variable.toString(),number.toString());
-   		  	}
-   		}
-   		else if(egal==1 & plus==1 && nombre==0)
-	  	{
-  			res=composants.get(composants.size()-1).ajouterIncrementationString(nomEvent,variable.toString(),valeurString.toString());
-	  	}
-   		if(res==-1)
-   		{
-			//Valeur non compatible
-   		}
-		else if(res==0)
-		{
-			//Variable non existante
-		}	
- 	}
-}
-
-void initialisation(): {} { <INIT> actionInit()}
-
-void actionInit():
-{
-	Token nomComposant, nomPropriete, valeurPropriete;
-}
-{
-  nomComposant = <ID> <ACCESATTRIBUT> nomPropriete = <ID><AFFECTATIONOperation>(valeurPropriete=<ID>|valeurPropriete=<NOMBRE>) <SEPARATEUR>
-  {
-    	int i=0;
-    	boolean trouv=false;
-    	while(!trouv && i<composants.size())
-    	{
-			if(composants.get(i).getNom().compareTo(nomComposant.toString())==0)
-			{
-			  	trouv = true;
-			 	int res = composants.get(i).initialiserPropriete(nomPropriete.toString(), valeurPropriete.toString());
-				if(res==1) 	
-				{
-					//Réussi
-				}
-				else if(res==0)
-				{
-				 	//Attribut non existant 
-				}
-				else if(res==-1)
-				{
-					//Valeur non compatible
-				}
-			}
-			i++;
-    	}
-		if(!trouv)
-		{
-			//Composant non existant
-		}
-  }
-  actionInit()
-  | actions()
-
-} 
-
-void actions(): {}
-{
-  {   
-	  AFCcomposer.enregistrerEtat();
-  }
-  
-  <ACT> action(0) fin() //Au début en fait selon l'etat 0
-}
-
-int action(int i):
-{
-  	int tmp,res=-1;
-}
-{    
-  	tmp=element(i) ( (<SEPARATEUR>res=element(tmp)|<TILDE>res=element(i)|<PLUS>res=element(i)) )*
-  	{
- 		return res;
-  	}
-}
-
-int element(int i): {int res;}	
-{
-  
-  ( res =operation(i)  | <ACCOLADEOuvrante> res = action(i) <ACCOLADEFermante> )
-  {
- 		return res;
-  }
-}
-
-int operation(int i):
-{
-	Token composant,action; 
-}
-{  
-  action = <NOMACTIONUTILISATEUR> composant= <PROPRIETAIRE>
-	  {
-	    	gotoEtat(i);
-	    	int j=0;
-	    	boolean trouv=false;
-			while(!trouv && j<composants.size())
-	    	{
-	    	
-	    	  if(composants.get(j).getNom().compareTo(composant.toString().substring(1,composant.toString().length()-1))==0)
-				{
-				  
-				  	int res = composants.get(j).executerAction(action.toString());
-
-					if (res==0)
-					{
-						System.out.println("Action non existante" + action.toString() +" "+composant.toString());	
-					}
-					int tmp = enregistrerEtat();
-					transitions.add(new Transition(i,tmp));
-					return tmp;		
-				}
-				j++;
-	    	}
-			if(!trouv)
-			{
-			  return -1;
-			  				System.out.println("Composant non existant");//Composant non existant 
-			}
-			return -1;
-	  }
-}
-
-void fin(): {} {<FIN>
-	{
-		automate= new Automate(etats,transitions);
-	}
-}
